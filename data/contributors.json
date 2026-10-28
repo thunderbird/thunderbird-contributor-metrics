@@ -1,0 +1,39 @@
+{
+  "updated": "2026-10-27",
+  "source": "Contributor measurements (Google Doc, Community Team)",
+  "datasets": {
+    "bitergia_totals": [
+      {"year": 2023, "period": "Full year", "contributions": 95889, "contributors": 6408},
+      {"year": 2024, "period": "Full year", "contributions": 94541, "contributors": 8557},
+      {"year": 2025, "period": "Full year", "contributions": 107365, "contributors": 8622},
+      {"year": 2026, "period": "Jan 1 – Sep 30", "contributions": 92841, "contributors": 6045}
+    ],
+    "bitergia_platforms": [
+      {"platform": "SUMO", "year": 2023, "period": "Full year", "contributions": 27505, "contributors": 5091, "locales": null},
+      {"platform": "SUMO", "year": 2024, "period": "Full year", "contributions": 32685, "contributors": 5612, "locales": null},
+      {"platform": "SUMO", "year": 2025, "period": "Full year", "contributions": 37842, "contributors": 5755, "locales": null},
+      {"platform": "SUMO", "year": 2026, "period": "Jan 1 – Sep 30", "contributions": 21050, "contributors": 3320, "locales": null},
+      {"platform": "Pontoon", "year": 2023, "period": "Full year", "contributions": 48680, "contributors": 168, "locales": 60},
+      {"platform": "Pontoon", "year": 2024, "period": "Full year", "contributions": 38566, "contributors": 191, "locales": 61},
+      {"platform": "Pontoon", "year": 2025, "period": "Full year", "contributions": 44664, "contributors": 198, "locales": 63},
+      {"platform": "Pontoon", "year": 2026, "period": "Jan 1 – Sep 30", "contributions": 49716, "contributors": 172, "locales": 61},
+      {"platform": "Topicbox", "year": 2023, "period": "Full year", "contributions": 3148, "contributors": 458, "locales": null},
+      {"platform": "Topicbox", "year": 2024, "period": "Full year", "contributions": 2412, "contributors": 375, "locales": null},
+      {"platform": "Topicbox", "year": 2025, "period": "Full year", "contributions": 1692, "contributors": 235, "locales": null},
+      {"platform": "Topicbox", "year": 2026, "period": "Jan 1 – Sep 30", "contributions": 979, "contributors": 140, "locales": null},
+      {"platform": "GitHub", "year": 2023, "period": "Full year", "contributions": 16130, "contributors": 114, "locales": null},
+      {"platform": "GitHub", "year": 2024, "period": "Full year", "contributions": 16437, "contributors": 136, "locales": null},
+      {"platform": "GitHub", "year": 2025, "period": "Full year", "contributions": 19085, "contributors": 149, "locales": null},
+      {"platform": "GitHub", "year": 2026, "period": "Jan 1 – Sep 30", "contributions": 18501, "contributors": 227, "locales": null}
+    ],
+    "bugzilla": [
+      {"year": 2023, "period": "Full year", "tickets_opened": 426, "comments": 2950, "contributors": 670},
+      {"year": 2024, "period": "Full year", "tickets_opened": 4441, "comments": 23217, "contributors": 2459},
+      {"year": 2025, "period": "Full year", "tickets_opened": 4082, "comments": 24821, "contributors": 2396},
+      {"year": 2026, "period": "Jan 1 – Sep 30", "tickets_opened": 3388, "comments": 20654, "contributors": 2279}
+    ],
+    "weblate": [
+      {"year": 2024, "contributions": 18710, "contributors": 169}
+    ]
+  }
+}

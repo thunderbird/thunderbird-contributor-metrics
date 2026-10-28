@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thunderbird contributor measurements</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐦</text></svg>">
+<style>
+:root{
+  --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-anthropic-serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --color-fg:#1f2328; --color-fg-muted:#59636e; --color-bg:#ffffff; --color-panel:#f6f8fa; --color-border-line:#d1d9e0;
+  --color-ok:#1a7f37; --color-bad:#cf222e;
+  --cds-font-size-caption:.8125rem; --cds-font-size-body:1rem; --cds-font-size-heading:1.0625rem; --cds-font-size-title:2rem;
+  --cds-font-weight-medium:600;
+  --cds-gap-xs:.25rem; --cds-gap-sm:.5rem; --cds-gap-md:1rem; --cds-gap-lg:1.5rem; --cds-gap-xl:2.5rem;
+  --cds-pad-xs:.25rem; --cds-pad-sm:.5rem; --cds-pad-md:.75rem; --cds-pad-lg:1.25rem;
+  --cds-radius:8px;
+  --cds-chart-axis:#8c959f;
+  --cds-surface-popover:#ffffff; --cds-border:#d1d9e0; --cds-shadow-popover:0 4px 14px rgba(31,35,40,.12); --cds-text-secondary:#59636e;
+  --cds-dur-slow:300ms;
+  --series-0:#2f6fde;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){:root{
+  --color-fg:#e6edf3; --color-fg-muted:#9198a1; --color-bg:#0d1117; --color-panel:#151b23; --color-border-line:#30363d;
+  --color-ok:#3fb950; --color-bad:#f85149; --cds-chart-axis:#6e7681;
+  --cds-surface-popover:#1c2128; --cds-border:#30363d; --cds-shadow-popover:0 4px 14px rgba(0,0,0,.5); --cds-text-secondary:#9198a1;
+  --series-0:#6ea8fe;
+}}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
+#dash-root{max-width:1200px;margin:0 auto;padding:clamp(1rem,4vw,2.5rem)}
+.dash-skeleton{color:transparent}
+
+
+.cm-wrap{font-family:var(--font-anthropic-sans);color:var(--color-fg);display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-variant-numeric:tabular-nums}
+.cm-title{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 var(--cds-gap-sm)}
+.cm-take{font-size:var(--cds-font-size-body);margin:0 0 var(--cds-gap-xs);max-width:60rem}
+.cm-take b{font-weight:var(--cds-font-weight-medium)}
+.cm-caption,.cm-note,.cm-sub,.cm-fig-label,.cm-tile-label{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:0}
+.cm-note{margin-bottom:var(--cds-gap-sm)}
+.cm-h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.cm-h3{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0 0 var(--cds-gap-xs)}
+.cm-sec-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--cds-gap-sm);margin-bottom:var(--cds-gap-xs)}
+.cm-section>.cm-note{margin-bottom:var(--cds-gap-md)}
+.cm-grid,.cm-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:var(--cds-gap-md)}
+.cm-tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))}
+.cm-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0}
+.cm-big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:var(--cds-gap-xs) 0}
+.cm-fig{margin:0}
+.cm-fig .cm-big{display:inline-block;margin:0}
+.cm-up{color:var(--color-ok)} .cm-down{color:var(--color-bad)}
+.cm-chart{position:relative;margin-top:var(--cds-gap-md)}
+.cm-chart text{font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-caption);fill:var(--color-fg-muted)}
+.cm-chart text.cm-val{fill:var(--color-fg)}
+.cm-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);white-space:nowrap;opacity:0}
+.cm-tip .cm-tip-k{color:var(--cds-text-secondary)}
+.cm-fail{display:flex;align-items:center;justify-content:center;gap:var(--cds-gap-xs);height:100%;min-height:inherit;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.cm-dot{width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+.cm-toggle{display:inline-flex;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);overflow:hidden}
+.cm-toggle button{font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-caption);background:transparent;color:var(--color-fg-muted);border:0;padding:var(--cds-pad-xs) var(--cds-pad-sm);cursor:pointer}
+.cm-toggle button[aria-pressed="true"]{background:var(--color-panel);color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.cm-scroll{overflow-x:auto}
+.cm-table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.cm-table th,.cm-table td{padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);text-align:right;white-space:nowrap}
+.cm-table th:first-child,.cm-table td:first-child{text-align:left}
+.cm-table th{color:var(--color-fg-muted);font-weight:var(--cds-font-weight-medium)}
+.cm-list{margin:0;padding-left:1.1rem;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);display:flex;flex-direction:column;gap:var(--cds-gap-xs)}
+.cm-list b{color:var(--color-fg)}
+.cm-wrap b{font-weight:var(--cds-font-weight-medium)}
+[data-dash-source-state=empty]{color:transparent}
+[data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+<!-- All numbers live in data/contributors.json. This page only needs editing to change layout or wording. -->
+<div id="dash-root">
+<div class="cm-wrap">
+<header id="top">
+<h1 class="cm-title">Thunderbird contributor measurements</h1>
+<p class="cm-take">In <span data-yr="latest">2025</span> Bitergia counted <b><span class=" dash-skeleton" data-draw="num" data-source="bitergia_totals" data-field="contributions" data-where="year=@latest">—</span></b> contributions, <b><span class="cm-delta dash-skeleton" data-draw="num" data-source="totals_change" data-field="change" data-where="metric=contributions" data-fmt="delta">—</span></b> on <span data-yr="prev">2024</span>.<span data-partial> So far in <span data-yr="partial">2026</span> (<span data-yr="partial-period">Jan 1 – Sep 30</span>), it has already reached <b><span class=" dash-skeleton" data-draw="num" data-source="totals_change" data-field="ytd_share" data-where="metric=contributions" data-fmt="pct">—</span></b> of that full-year total.</span></p>
+<p class="cm-caption">From the Community Team’s Contributor measurements document. Bitergia figures exclude bots.<span data-partial> <span data-yr="partial">2026</span> covers <span data-yr="partial-period">Jan 1 – Sep 30</span>.</span> Numbers last updated <span data-meta="updated">—</span>.</p>
+</header>
+
+<section class="cm-tiles" id="headline" aria-label="Headline figures">
+<div class="cm-card"><p class="cm-tile-label">Contributions · <span data-yr="latest">2025</span></p><p class="cm-big dash-skeleton" data-draw="num" data-source="bitergia_totals" data-field="contributions" data-where="year=@latest">—</p><p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="totals_change" data-field="change" data-where="metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p></div>
+<div class="cm-card"><p class="cm-tile-label">Contributors · <span data-yr="latest">2025</span></p><p class="cm-big dash-skeleton" data-draw="num" data-source="bitergia_totals" data-field="contributors" data-where="year=@latest">—</p><p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="totals_change" data-field="change" data-where="metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p></div>
+<div class="cm-card" data-partial><p class="cm-tile-label">Contributions · <span data-yr="partial">2026</span>, <span data-yr="partial-period">Jan 1 – Sep 30</span></p><p class="cm-big dash-skeleton" data-draw="num" data-source="bitergia_totals" data-field="contributions" data-where="year=@partial">—</p><p class="cm-sub"><span class=" dash-skeleton" data-draw="num" data-source="totals_change" data-field="ytd_share" data-where="metric=contributions" data-fmt="pct">—</span> of the <span data-yr="latest">2025</span> total</p></div>
+<div class="cm-card" data-partial><p class="cm-tile-label">Contributors · <span data-yr="partial">2026</span>, <span data-yr="partial-period">Jan 1 – Sep 30</span></p><p class="cm-big dash-skeleton" data-draw="num" data-source="bitergia_totals" data-field="contributors" data-where="year=@partial">—</p><p class="cm-sub"><span class=" dash-skeleton" data-draw="num" data-source="totals_change" data-field="ytd_share" data-where="metric=contributors" data-fmt="pct">—</span> of the <span data-yr="latest">2025</span> total</p></div>
+</section>
+
+<section class="cm-section" id="totals">
+<div class="cm-sec-head"><h2 class="cm-h2">All platforms in Bitergia</h2></div>
+<p class="cm-note">Contributions from Bitergia’s Contributors Growth panel; contributors from a deduplicated count using the definitions below. <span data-partial>The lighter bar is <span data-yr="partial">2026</span>, <span data-yr="partial-period">Jan 1 – Sep 30</span>.</span></p>
+<div class="cm-grid">
+<article class="cm-card" id="chart-contributions"><h3 class="cm-h3">Contributions by year</h3><p class="cm-note">Every counted action across SUMO, Pontoon, Topicbox, Bugzilla and GitHub.</p><div class="cm-chart dash-skeleton" data-draw="bars" data-source="bitergia_totals" data-y="contributions" data-label="Contributions" data-h="200" aria-label="Contributions by year"></div></article>
+<article class="cm-card" id="chart-contributors"><h3 class="cm-h3">Contributors by year</h3><p class="cm-note">Unique people in the year who answered on SUMO, filed or commented on a Bugzilla ticket, authored a GitHub commit, translated in Pontoon or posted to Topicbox. Each person counts once.</p><div class="cm-chart dash-skeleton" data-draw="bars" data-source="bitergia_totals" data-y="contributors" data-label="Contributors" data-h="200" aria-label="Contributors by year"></div></article>
+</div>
+</section>
+
+<section class="cm-section" id="platforms">
+<div class="cm-sec-head"><h2 class="cm-h2">By platform</h2>
+<div class="cm-toggle" role="group" aria-label="Measure"><button type="button" data-metric-btn="contributors" aria-pressed="true">Contributors</button><button type="button" data-metric-btn="contributions" aria-pressed="false">Contributions</button></div></div>
+<p class="cm-note">Each chart has its own scale, since the platforms differ in size by orders of magnitude. <span data-partial>The lighter bar is <span data-yr="partial">2026</span>, <span data-yr="partial-period">Jan 1 – Sep 30</span>.</span></p>
+<div class="cm-grid">
+<article class="cm-card cm-plat" id="platform-sumo">
+<h3 class="cm-h3">SUMO</h3>
+<p class="cm-note">Contributor: answered at least one support question (askers aren’t counted). Contribution: one answer.</p>
+<div class="cm-metric" data-metric="contributors">
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributors" data-where="platform=SUMO&amp;year=@latest">—</span> <span class="cm-fig-label">contributors in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=SUMO&amp;metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="SUMO" data-y="contributors" data-label="Contributors" data-h="150" aria-label="SUMO contributors by year"></div>
+</div>
+<div class="cm-metric" data-metric="contributions" hidden>
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributions" data-where="platform=SUMO&amp;year=@latest">—</span> <span class="cm-fig-label">contributions in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=SUMO&amp;metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="SUMO" data-y="contributions" data-label="Contributions" data-h="150" aria-label="SUMO contributions by year"></div>
+</div>
+</article>
+<article class="cm-card cm-plat" id="platform-pontoon">
+<h3 class="cm-h3">Pontoon</h3>
+<p class="cm-note">Contributor: submitted a change to at least one string. Contribution: one submitted change.</p>
+<div class="cm-metric" data-metric="contributors">
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributors" data-where="platform=Pontoon&amp;year=@latest">—</span> <span class="cm-fig-label">contributors in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Pontoon&amp;metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<p class="cm-sub"><span class=" dash-skeleton" data-draw="num" data-source="bitergia_platforms" data-field="locales" data-where="platform=Pontoon&amp;year=@latest">—</span> locales active in <span data-yr="latest">2025</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Pontoon" data-y="contributors" data-label="Contributors" data-h="150" aria-label="Pontoon contributors by year"></div>
+</div>
+<div class="cm-metric" data-metric="contributions" hidden>
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributions" data-where="platform=Pontoon&amp;year=@latest">—</span> <span class="cm-fig-label">contributions in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Pontoon&amp;metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Pontoon" data-y="contributions" data-label="Contributions" data-h="150" aria-label="Pontoon contributions by year"></div>
+</div>
+</article>
+<article class="cm-card cm-plat" id="platform-bugzilla">
+<h3 class="cm-h3">Bugzilla</h3>
+<p class="cm-note">Thunderbird, MailNews Core, Calendar and Chat Core. Contributor: opened an issue or commented on one. Contribution: one opened issue or one comment. Bitergia’s 2023 Bugzilla data is incomplete.</p>
+<div class="cm-metric" data-metric="contributors">
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributors" data-where="platform=Bugzilla&amp;year=@latest">—</span> <span class="cm-fig-label">contributors in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Bugzilla&amp;metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Bugzilla" data-y="contributors" data-label="Contributors" data-h="150" aria-label="Bugzilla contributors by year"></div>
+</div>
+<div class="cm-metric" data-metric="contributions" hidden>
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributions" data-where="platform=Bugzilla&amp;year=@latest">—</span> <span class="cm-fig-label">contributions in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Bugzilla&amp;metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<p class="cm-sub"><span data-yr="latest">2025</span>: <span class=" dash-skeleton" data-draw="num" data-source="bugzilla" data-field="tickets_opened" data-where="year=@latest">—</span> tickets opened, <span class=" dash-skeleton" data-draw="num" data-source="bugzilla" data-field="comments" data-where="year=@latest">—</span> comments</p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Bugzilla" data-y="contributions" data-label="Contributions" data-h="150" aria-label="Bugzilla contributions by year"></div>
+</div>
+</article>
+<article class="cm-card cm-plat" id="platform-github">
+<h3 class="cm-h3">GitHub</h3>
+<p class="cm-note">Contributor: authored a commit in a tracked repo (l10n repos excluded). Contribution: one commit.</p>
+<div class="cm-metric" data-metric="contributors">
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributors" data-where="platform=GitHub&amp;year=@latest">—</span> <span class="cm-fig-label">contributors in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=GitHub&amp;metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="GitHub" data-y="contributors" data-label="Contributors" data-h="150" aria-label="GitHub contributors by year"></div>
+</div>
+<div class="cm-metric" data-metric="contributions" hidden>
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributions" data-where="platform=GitHub&amp;year=@latest">—</span> <span class="cm-fig-label">contributions in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=GitHub&amp;metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="GitHub" data-y="contributions" data-label="Contributions" data-h="150" aria-label="GitHub contributions by year"></div>
+</div>
+</article>
+<article class="cm-card cm-plat" id="platform-topicbox">
+<h3 class="cm-h3">Topicbox</h3>
+<p class="cm-note">Contributor: posted to any Thunderbird Topicbox list. Contribution: one message.</p>
+<div class="cm-metric" data-metric="contributors">
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributors" data-where="platform=Topicbox&amp;year=@latest">—</span> <span class="cm-fig-label">contributors in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Topicbox&amp;metric=contributors" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Topicbox" data-y="contributors" data-label="Contributors" data-h="150" aria-label="Topicbox contributors by year"></div>
+</div>
+<div class="cm-metric" data-metric="contributions" hidden>
+<p class="cm-fig"><span class="cm-big dash-skeleton" data-draw="num" data-source="platform_all" data-field="contributions" data-where="platform=Topicbox&amp;year=@latest">—</span> <span class="cm-fig-label">contributions in <span data-yr="latest">2025</span></span></p>
+<p class="cm-sub"><span class="cm-delta dash-skeleton" data-draw="num" data-source="platform_change" data-field="change" data-where="platform=Topicbox&amp;metric=contributions" data-fmt="delta">—</span> vs <span data-yr="prev">2024</span></p>
+<div class="cm-chart dash-skeleton" data-draw="bars" data-source="platform_all" data-platform="Topicbox" data-y="contributions" data-label="Contributions" data-h="150" aria-label="Topicbox contributions by year"></div>
+</div>
+</article>
+</div>
+</section>
+
+<section class="cm-section" id="checks">
+<div class="cm-sec-head"><h2 class="cm-h2">Data checks</h2></div>
+<p class="cm-note">How the deduplicated totals compare with the platform panels added together.</p>
+<div class="cm-grid">
+<article class="cm-card" id="check-sums"><h3 class="cm-h3">Platform figures vs Bitergia total</h3>
+<p class="cm-note">The total counts each person once, so it can come in under the sum of the platform panels when people contribute on more than one platform. When it comes in over the sum, a platform panel is counting fewer people than the total’s definition does.</p>
+<div class="cm-scroll"><table class="cm-table" data-source="reconcile" data-row-key="year"><thead><tr><th data-field="year">Year</th><th data-field="total_contributors">Total contributors</th><th data-field="platform_contributors">Sum of platforms</th><th data-field="total_contributions">Total contributions</th><th data-field="platform_contributions">Sum of platforms</th></tr></thead><tbody data-draw="reconcile-body"></tbody></table></div></article>
+</div>
+</section>
+
+<section class="cm-section" id="coverage">
+<div class="cm-sec-head"><h2 class="cm-h2">Outside Bitergia</h2></div>
+<p class="cm-note">A source the document lists that isn’t in the Bitergia totals.</p>
+<div class="cm-tiles">
+<div class="cm-card"><p class="cm-tile-label">Weblate (TBfA) · translated words, 2024</p><p class="cm-big dash-skeleton" data-draw="num" data-source="weblate" data-field="contributions" data-where="year=2024">—</p><p class="cm-sub"><span class=" dash-skeleton" data-draw="num" data-source="weblate" data-field="contributors" data-where="year=2024">—</span> contributors submitting word changes</p></div>
+</div>
+</section>
+</div>
+</div>
+<script>
+window.YEARS = {};
+window.dash = (() => {
+  let DATA = null, failed = false;
+  const calcs = {}, cache = {}, draws = [];
+  const data = (id) => {
+    if (failed) return {status: 'error', data: []};
+    if (!DATA) return {status: 'loading', data: []};
+    if (id in DATA) return {status: 'ok', data: DATA[id]};
+    if (id in calcs) {
+      if (!(id in cache)) cache[id] = calcs[id].fn(...calcs[id].inputs.map((i) => data(i).data));
+      return {status: 'ok', data: cache[id]};
+    }
+    return {status: 'error', data: []};
+  };
+  const run = () => draws.forEach(([name, fn]) =>
+    document.querySelectorAll('[data-draw="' + name + '"]').forEach((el) => { if (!el.closest('[hidden]')) fn(el); }));
+  let pending = false;
+  const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; run(); }); } };
+  window.addEventListener('resize', schedule);
+  new MutationObserver(schedule).observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['hidden']});
+
+  // Works out which years the page talks about from the totals:
+  // latest = newest full year, prev = the year before it, partial = a year still in progress (if any).
+  const setYears = (totals) => {
+    const full = totals.filter((r) => r.period === 'Full year').map((r) => Number(r.year));
+    const part = totals.filter((r) => r.period !== 'Full year');
+    YEARS.latest = Math.max(...full);
+    YEARS.prev = YEARS.latest - 1;
+    const p = part.sort((a, b) => b.year - a.year)[0];
+    YEARS.partial = p ? Number(p.year) : null;
+    YEARS['partial-period'] = p ? p.period : '';
+    document.querySelectorAll('[data-yr]').forEach((el) => { el.textContent = YEARS[el.dataset.yr] ?? ''; });
+    document.querySelectorAll('[data-partial]').forEach((el) => { el.hidden = !p; });
+  };
+
+  const load = () => fetch('data/contributors.json', {cache: 'no-cache'})
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((json) => {
+      DATA = json.datasets;
+      setYears(DATA.bitergia_totals);
+      const up = document.querySelector('[data-meta="updated"]');
+      if (up) up.textContent = new Date(json.updated + 'T12:00:00').toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+      run();
+    })
+    .catch((e) => { console.error('Could not load data/contributors.json', e); failed = true; run(); });
+
+  return {
+    data,
+    calc: (id, o) => { calcs[id] = o; },
+    draw: (name, fn) => { draws.push([name, fn]); },
+    colors: [getComputedStyle(document.documentElement).getPropertyValue('--series-0').trim() || '#2f6fde'],
+    _start: () => { run(); load(); }
+  };
+})();
+</script>
+<script>
+dash.calc('platform_all', {
+  title: 'Platform figures by year',
+  description: 'Bitergia platform panels by year; Bugzilla contributions are tickets opened plus comments.',
+  inputs: ['bitergia_platforms', 'bugzilla'],
+  fn: (bitergia_platforms, bugzilla) => [
+    ...bitergia_platforms.map((r) => ({platform: r.platform, year: Number(r.year), period: r.period, contributions: Number(r.contributions), contributors: Number(r.contributors)})),
+    ...bugzilla.map((r) => ({platform: 'Bugzilla', year: Number(r.year), period: r.period, contributions: Number(r.tickets_opened) + Number(r.comments), contributors: Number(r.contributors)}))
+  ]
+});
+dash.calc('totals_change', {
+  title: 'Totals change and current-year pace',
+  description: 'Change from the year before the latest full year, and the partial year as a share of the latest full year.',
+  inputs: ['bitergia_totals'],
+  fn: (bitergia_totals) => {
+    const y = (n) => bitergia_totals.find((r) => Number(r.year) === n) || {};
+    return ['contributions', 'contributors'].map((m) => ({metric: m, change: Number(y(YEARS.latest)[m]) / Number(y(YEARS.prev)[m]) - 1, ytd_share: Number(y(YEARS.partial)[m]) / Number(y(YEARS.latest)[m])}));
+  }
+});
+dash.calc('platform_change', {
+  title: 'Platform change, latest full year',
+  description: 'Each platform’s latest full-year figure against the year before.',
+  inputs: ['platform_all'],
+  fn: (platform_all) => {
+    const get = (p, yr, m) => Number((platform_all.find((r) => r.platform === p && r.year === yr) || {})[m]);
+    const names = [...new Set(platform_all.map((r) => r.platform))];
+    return names.flatMap((p) => ['contributors', 'contributions'].map((m) => ({platform: p, metric: m, change: get(p, YEARS.latest, m) / get(p, YEARS.prev, m) - 1})));
+  }
+});
+dash.calc('reconcile', {
+  title: 'Platform sums vs total',
+  description: 'Bitergia Contributors Growth totals beside the sum of the five platform panels.',
+  inputs: ['bitergia_totals', 'platform_all'],
+  fn: (bitergia_totals, platform_all) => bitergia_totals.map((t) => {
+    const ps = platform_all.filter((r) => r.year === Number(t.year));
+    return {year: Number(t.year), total_contributors: Number(t.contributors), platform_contributors: ps.reduce((s, r) => s + r.contributors, 0), total_contributions: Number(t.contributions), platform_contributions: ps.reduce((s, r) => s + r.contributions, 0)};
+  })
+});
+
+const fmt = {
+  int: d3.format(','),
+  pct: d3.format('.0%'),
+  delta: d3.format('+.1%'),
+  compact: (v) => new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 1}).format(v)
+};
+const rowFor = (el) => {
+  const d = dash.data(el.dataset.source);
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return {status: d.status};
+  const conds = (el.dataset.where || '').split('&').filter(Boolean).map((p) => p.split('=').map(decodeURIComponent))
+    .map(([k, v]) => [k, v.startsWith('@') ? String(YEARS[v.slice(1)]) : v]);
+  const row = d.data.find((r) => conds.every(([k, v]) => String(r[k]) === v));
+  return {status: 'ok', row};
+};
+const failLine = (el) => {
+  const box = document.createElement('div'); box.className = 'cm-fail';
+  const dot = document.createElement('span'); dot.className = 'cm-dot';
+  box.append(dot, document.createTextNode('Failed to load'));
+  el.replaceChildren(box);
+};
+
+dash.draw('num', (el) => {
+  const {status, row} = rowFor(el);
+  const v = row ? row[el.dataset.field] : null;
+  el.classList.remove('cm-up', 'cm-down');
+  if (status !== 'ok' || v == null || !Number.isFinite(Number(v))) {
+    el.textContent = '—';
+    el.classList.toggle('dash-skeleton', status === 'loading');
+    return;
+  }
+  el.classList.remove('dash-skeleton');
+  const f = el.dataset.fmt || 'int';
+  el.textContent = fmt[f](Number(v));
+  if (f === 'delta') { el.classList.toggle('cm-up', v > 0); el.classList.toggle('cm-down', v < 0); }
+});
+
+dash.draw('bars', (el) => {
+  const H = Number(el.dataset.h || 170);
+  el.style.minHeight = H + 'px';
+  const d = dash.data(el.dataset.source);
+  if (d.status !== 'ok') {
+    if (d.status === 'error' || d.status === 'connect') { el.classList.remove('dash-skeleton'); failLine(el); }
+    else { el.replaceChildren(); el.classList.add('dash-skeleton'); }
+    return;
+  }
+  el.classList.remove('dash-skeleton');
+  const field = el.dataset.y, plat = el.dataset.platform, label = el.dataset.label;
+  const rows = d.data.filter((r) => !plat || r.platform === plat)
+    .map((r) => ({year: Number(r.year), v: Number(r[field]), period: r.period}))
+    .filter((r) => Number.isFinite(r.v)).sort((a, b) => a.year - b.year);
+  el.replaceChildren();
+  const W = Math.max(el.clientWidth || 300, 160);
+  const top = 22, bottom = 24;
+  const x = d3.scaleBand(rows.map((r) => r.year), [0, W]).paddingInner(0.3).paddingOuter(0.15);
+  const y = d3.scaleLinear([0, d3.max(rows, (r) => r.v) || 1], [H - bottom, top]);
+  const bw = Math.min(x.bandwidth(), 32);
+  const cx = (r) => x(r.year) + x.bandwidth() / 2;
+  const partial = (r) => r.period && r.period !== 'Full year';
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', el.getAttribute('aria-label') || label);
+  svg.append('line').attr('x1', 0).attr('x2', W).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => cx(r) - bw / 2).attr('width', bw)
+    .attr('y', (r) => y(r.v)).attr('height', (r) => Math.max(0, y(0) - y(r.v))).attr('rx', 4)
+    .attr('fill', dash.colors[0]).attr('fill-opacity', (r) => partial(r) ? 0.45 : 1);
+  const vals = svg.append('g').selectAll('text').data(rows).join('text').attr('class', 'cm-val')
+    .attr('x', cx).attr('y', (r) => y(r.v) - 6).attr('text-anchor', 'middle').text((r) => fmt.compact(r.v));
+  const longL = (r) => partial(r) ? `${r.year} YTD` : String(r.year);
+  const shortL = (r) => partial(r) ? `’${String(r.year).slice(2)} YTD` : `’${String(r.year).slice(2)}`;
+  const xl = svg.append('g').selectAll('text').data(rows).join('text')
+    .attr('x', cx).attr('y', H - 6).attr('text-anchor', 'middle').text(longL);
+  const widest = (sel) => d3.max(sel.nodes(), (n) => n.getComputedTextLength()) || 0;
+  if (widest(xl) > x.step() - 4) xl.text(shortL);
+  if (widest(vals) > x.step() - 2) vals.remove();
+  const tip = document.createElement('div'); tip.className = 'cm-tip'; el.append(tip);
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => x(r.year) - x.step() * x.paddingInner() / 2).attr('width', x.step())
+    .attr('y', 0).attr('height', H).attr('fill', 'transparent')
+    .on('pointerenter', (ev, r) => {
+      const k = document.createElement('div'); k.className = 'cm-tip-k'; k.textContent = partial(r) ? `${r.year}, ${r.period}` : String(r.year);
+      const v = document.createElement('div'); v.textContent = `${label}: ${fmt.int(r.v)}`;
+      tip.replaceChildren(k, v);
+      tip.style.opacity = '1';
+      const scale = el.clientWidth / W;
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      const left = Math.min(Math.max(cx(r) * scale - tw / 2, 0), el.clientWidth - tw);
+      const topPx = Math.max(y(r.v) * scale - th - 8, 0);
+      tip.style.left = left + 'px'; tip.style.top = topPx + 'px';
+    })
+    .on('pointerleave', () => { tip.style.opacity = '0'; });
+});
+
+const tableBody = (name, src, cols) => dash.draw(name, (tbody) => {
+  const d = dash.data(src);
+  tbody.replaceChildren();
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    for (const [c, f] of cols) {
+      const td = document.createElement('td');
+      const v = r[c];
+      td.textContent = f ? (v == null || !Number.isFinite(Number(v)) ? '—' : fmt[f](Number(v))) : String(v);
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+});
+tableBody('reconcile-body', 'reconcile', [['year'], ['total_contributors', 'int'], ['platform_contributors', 'int'], ['total_contributions', 'int'], ['platform_contributions', 'int']]);
+
+const setMetric = (m) => {
+  document.querySelectorAll('[data-metric]').forEach((n) => { n.hidden = n.dataset.metric !== m; });
+  document.querySelectorAll('[data-metric-btn]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metricBtn === m)));
+};
+document.querySelectorAll('[data-metric-btn]').forEach((b) => b.addEventListener('click', () => setMetric(b.dataset.metricBtn)));
+
+
+dash._start();
+</script>
+</body>
+</html>
